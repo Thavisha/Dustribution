@@ -9,7 +9,7 @@ The integrated dust densities from the grid will be the model extinctions which 
 """
 
 #Integrate density for ALL stars tp Obtain the (integrated) model extinctions - Units of Ext = Mags
-def integ_allSource(source_dists, source_l, source_b, l_bounds, b_bounds, d_bounds, threeDGrid_l, threeDGrid_b, l_ind, b_ind, d_ind, density_samples, parallel=False):
+def integ_allSource(source_dists, source_l, source_b, l_bounds, b_bounds, d_bounds, threeDGrid_l, threeDGrid_b, l_ind, b_ind, d_ind, density_samples):
     
     """
     this returns the whole distribution of pathInts
