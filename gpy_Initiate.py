@@ -20,7 +20,7 @@ from gpyClass_Latent import LatentDensityGPModel
 # A quick helper function for getting smoothed percentile values from samples
 #Taken from https://docs.gpytorch.ai/en/v1.1.1/examples/07_Pyro_Integration/Cox_Process_Example.html [11]
 #Gives the 16th , 50th and 84th percentiles - these will be dens +/- uncertianties in the end
-def percentiles_from_samples(samples, percentiles=[0.16, 0.5, 0.84]):
+def percentiles_from_samples(samples, pred_gpu, percentiles=[0.16, 0.5, 0.84]):
     num_samples = samples.size(0)
     samples = samples.sort(dim=0)[0]
 
@@ -29,6 +29,10 @@ def percentiles_from_samples(samples, percentiles=[0.16, 0.5, 0.84]):
 
     # Smooth the samples
     kernel = torch.full((1, 1, 5), fill_value=0.2)
+
+    if pred_gpu:
+        kernel = kernel.double().cuda()
+
     percentiles_samples = [
         torch.nn.functional.conv1d(percentile_sample.view(1, 1, -1), kernel, padding=2).view(-1)
         for percentile_sample in percentile_samples
@@ -44,7 +48,7 @@ def percentiles_from_samples(samples, percentiles=[0.16, 0.5, 0.84]):
 def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_ext_dens, exp_scalefac, 
                             learning_rate, learning_eps, num_iter, num_particles, num_inducing, min_iter, 
                             stop_prcnt, stop_iter, snapshot_iter, resume_training,
-                            l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, condition_grid):
+                            l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, condition_grid, train_gpu):
 
 
 
@@ -81,7 +85,9 @@ def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_e
 
     #Create the GP with latent variable
     gp = LatentDensityGPModel(source_dists, source_l, source_b, l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train_l, threeDGrid_train_b, l_ind, b_ind, d_ind,
-                                inducing_points, name_prefix="density_gp_model")
+                                inducing_points, train_gpu, name_prefix="density_gp_model")
+
+
 
 
 
@@ -101,7 +107,7 @@ def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_e
 
     #The coordinates where the latent variables will be infered on - where the GP is trained on to learn the densities (at these given coords)
     train_coords = torch.tensor(threeDGrid_train[["cart_x", "cart_y", "cart_z"]].values, dtype=torch.float, requires_grad = True) #Convert the pandas df to a pytorch compatible data strutcure
-
+    
 
     #Empty Arrays to hold iteration information for plotting performance plots later
     elbo_list = []
@@ -111,11 +117,23 @@ def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_e
     scalefac_list = []
     meanDens_list = []
 
+    if train_gpu: #Run on GPU (Don't need a cpu version as the varaible are already stored in CPU)
+
+        print("Is a GPU available? ", torch.cuda.is_available())
+
+        ### SEND EVERYTHING TO THE GPU ###
+        train_coords = train_coords.double().cuda()
+        condition_coords = condition_coords.double().cuda()
+        condition_ext = condition_ext.double().cuda()
+        condition_ext_mean = condition_ext_mean.double().cuda()
+        condition_ext_unc = condition_ext_unc.double().cuda()
+        gp = gp.double().cuda()
+
     # Use the adam+elbo (grad.descent) optimizer in pyro 
     # Here we use AdamW (instead of simple Adam): https://pytorch.org/docs/master/optim.html#torch.optim.Adagrad
     #CLASStorch.optim.AdamW(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)   
     # Here we can train from the start or load a previous snapshot and train from the end of that snapshot - all the information required to restart the gp training from the previous snapshot is saved in the snapshot it self
-    def train(elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list, lr=learning_rate, resume_training=resume_training, min_iter = min_iter, num_iter=num_iter, learning_eps=learning_eps, num_particles=num_particles): 
+    def train(elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list, gp, lr=learning_rate, resume_training=resume_training, min_iter = min_iter, num_iter=num_iter, learning_eps=learning_eps, num_particles=num_particles): 
 
         optimizer = pyro.optim.AdamW({"lr":lr, "eps":learning_eps})
         loss = pyro.infer.Trace_ELBO(num_particles=num_particles, vectorize_particles=False, retain_graph=True)
@@ -128,6 +146,10 @@ def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_e
             #load the most recent Snapshot
             snapshot = load_Snapshot()
             gp.load_state_dict(snapshot["gp_state_dict"])
+
+            if train_gpu: 
+                gp = gp.cuda() #For GPU - Making absolutely sure that the re-initialised GP is sent to the GPU
+
             optimizer.set_state(snapshot["optimizer_state_dict"])
             loss = snapshot["loss"]
             loader = tqdm.tqdm(range(snapshot["iteration"], num_iter))
@@ -178,7 +200,7 @@ def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_e
 
         return elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list
 
-    elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list = train(elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list)
+    elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list = train(elbo_list, lsx_list, lsy_list, lsz_list, scalefac_list, meanDens_list, gp)
 
     #Save iteration information for plotting performance plots later
     with open("Iteration_Info.pkl", "wb") as f:
@@ -196,7 +218,7 @@ def GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_e
 
 @profile
 #Predict using the previously trained GP model
-def GP_Predict(chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp):
+def GP_Predict(chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu):
 
     #Puts the GP into the evaluate mode rather than training mode
     gp.eval()
@@ -205,6 +227,12 @@ def GP_Predict(chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bou
     #This steps uses the trained gp (trained on only the subsample) to produce the prediction with the input test data sample which in this case is our full grid
     #If we want a new grid for prediction then we need to input it here! 
     pred_coords = torch.tensor(threeDGrid_pred[["cart_x", "cart_y", "cart_z"]].values, dtype=torch.float, requires_grad = True) #Convert the pandas df to a pytorch compatible data strutcure
+
+    if pred_gpu: #Predict on GPU
+        pred_coords = pred_coords.double().cuda()
+        gp.cuda()
+    else:
+        gp.cpu() #To make gp CPU compatible if Pred in CPU. Only needed if training is done in GPU and Pred is in CPU. If training was already done on CPU this will have no effect. 
 
     gp_DensPred_start_time = time.time()
     print("GP Dens Pred start time = ", gp_DensPred_start_time)
@@ -222,11 +250,11 @@ def GP_Predict(chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bou
             try:
                 function_dist = gp(pred_coords[i_start:i_end,:])  #Take a distribution of the latent varaibles/samples
                 dens_samples = 10**function_dist(torch.Size([pred_sample_size])) #sample from that distribution and transform to the function domain we want - in our case log10(dens) to dens
-                lowerP, median, upperP = percentiles_from_samples(dens_samples) #Gives 16th, 50th, 84th percentiles
+                lowerP, median, upperP = percentiles_from_samples(dens_samples, pred_gpu) #Gives 16th, 50th, 84th percentiles
             except ValueError:
                 function_dist = gp(pred_coords[i_start:,:])  
                 dens_samples = 10**function_dist(torch.Size([pred_sample_size])) 
-                lowerP, median, upperP = percentiles_from_samples(dens_samples) 
+                lowerP, median, upperP = percentiles_from_samples(dens_samples, pred_gpu) 
 
             try:
                 dens_samples_all = torch.cat((dens_samples_all, dens_samples), 1) 
@@ -252,7 +280,7 @@ def GP_Predict(chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bou
     print("GP Ext Pred start time = ", gp_ExtPred_start_time)
 
     #Integrate all the density samples to get Extinctions percentiles
-    extinction_hypercube = integ_allLoS(l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred["pol_l"].to_numpy(), threeDGrid_pred["pol_b"].to_numpy(), dens_samples_all.numpy(), n_samples=pred_sample_size)
+    extinction_hypercube = integ_allLoS(l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred["pol_l"].to_numpy(), threeDGrid_pred["pol_b"].to_numpy(), dens_samples_all.cpu().numpy(), n_samples=pred_sample_size)
 
     ext_med_cube = np.percentile(extinction_hypercube, 50, axis = 0)
     ext_16_cube = np.percentile(extinction_hypercube, 16, axis = 0)

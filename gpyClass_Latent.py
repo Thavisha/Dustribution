@@ -16,7 +16,7 @@ class LatentDensityGPModel(gpytorch.models.ApproximateGP):
     
     #Define the GP RBF kernel, variational distribution and the GP strategy 
     def __init__(self, source_dists, source_l, source_b, l_bounds, b_bounds, d_bounds, threeDGrid_l, threeDGrid_b, l_ind, b_ind, d_ind,
-                        inducing_points, name_prefix="density_gp_model"):
+                    inducing_points, train_gpu, name_prefix="density_gp_model"):
         """
         Sets up the gaussian process it self. e.g: kernel and it's hyperparameters, the input data and the training grid
         """
@@ -27,17 +27,35 @@ class LatentDensityGPModel(gpytorch.models.ApproximateGP):
         self.name_prefix = name_prefix
 
         #We input all the information needed by the dens_integ function here and convert them to tensors as required by torch
-        self.source_dists = torch.Tensor(source_dists)
-        self.source_l = torch.Tensor(source_l)
-        self.source_b = torch.Tensor(source_b)
-        self.l_bounds = torch.Tensor(l_bounds) 
-        self.b_bounds = torch.Tensor(b_bounds)
-        self.d_bounds = torch.Tensor(d_bounds)
-        self.threeDGrid_l = torch.Tensor(threeDGrid_l)
-        self.threeDGrid_b = torch.Tensor(threeDGrid_b)
-        self.l_ind = torch.from_numpy(l_ind) 
-        self.b_ind = torch.from_numpy(b_ind) 
-        self.d_ind = torch.from_numpy(d_ind) 
+        self.train_gpu = train_gpu
+
+        if train_gpu: #Run code on GPU
+
+            self.source_dists = torch.Tensor(source_dists).double().cuda()
+            self.source_l = torch.Tensor(source_l).double().cuda()
+            self.source_b = torch.Tensor(source_b).double().cuda()
+            self.l_bounds = torch.Tensor(l_bounds).double().cuda()
+            self.b_bounds = torch.Tensor(b_bounds).double().cuda()
+            self.d_bounds = torch.Tensor(d_bounds).double().cuda()
+            self.threeDGrid_l = torch.Tensor(threeDGrid_l).double().cuda()
+            self.threeDGrid_b = torch.Tensor(threeDGrid_b).double().cuda()
+            self.l_ind = torch.from_numpy(l_ind).cuda() 
+            self.b_ind = torch.from_numpy(b_ind).cuda() 
+            self.d_ind = torch.from_numpy(d_ind).cuda() 
+
+        else: #Run code on CPU
+
+            self.source_dists = torch.Tensor(source_dists)
+            self.source_l = torch.Tensor(source_l)
+            self.source_b = torch.Tensor(source_b)
+            self.l_bounds = torch.Tensor(l_bounds)
+            self.b_bounds = torch.Tensor(b_bounds)
+            self.d_bounds = torch.Tensor(d_bounds)
+            self.threeDGrid_l = torch.Tensor(threeDGrid_l)
+            self.threeDGrid_b = torch.Tensor(threeDGrid_b)
+            self.l_ind = torch.from_numpy(l_ind)
+            self.b_ind = torch.from_numpy(b_ind)
+            self.d_ind = torch.from_numpy(d_ind)
 
 
         # Define the variational distribution and strategy of the GP
@@ -102,7 +120,7 @@ class LatentDensityGPModel(gpytorch.models.ApproximateGP):
             
             #Now we integrate
             extinction_samples = integ_allSource(self.source_dists, self.source_l, self.source_b, self.l_bounds, self.b_bounds, self.d_bounds, 
-                                                    self.threeDGrid_l, self.threeDGrid_b, self.l_ind, self.b_ind, self.d_ind, density_samples.T)
+                                                    self.threeDGrid_l, self.threeDGrid_b, self.l_ind, self.b_ind, self.d_ind, density_samples.T, self.train_gpu)
 
             #Calculate the log-likelihood
             return pyro.sample(self.name_prefix + ".y",

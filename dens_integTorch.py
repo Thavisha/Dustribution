@@ -9,26 +9,44 @@ The integrated dust densities from the grid will be the model extinctions which 
 """
 
 #Integrate density for ALL stars tp Obtain the (integrated) model extinctions - Units of Ext = Mags
-def integ_allSource(source_dists, source_l, source_b, l_bounds, b_bounds, d_bounds, threeDGrid_l, threeDGrid_b, l_ind, b_ind, d_ind, density_samples):
+def integ_allSource(source_dists, source_l, source_b, l_bounds, b_bounds, d_bounds, threeDGrid_l, threeDGrid_b, l_ind, b_ind, d_ind, density_samples, train_gpu):
     
     """
     this returns the whole distribution of pathInts
     """
 
-    #Empty array to hold path integrated density distributions in the end
-    #If we have multiple dust types then we just add more sets of zero arrays as cols
-    PredExt_Distribution = torch.zeros(len(source_dists))
+    #Run code on GPU
+    if train_gpu:
 
-    #global source_indices
-    source_indices = torch.arange(len(source_dists)) #hack to get around need to know indexes in loop over sources - this could be skipped if an input was created as source_indices with source_df.index.values passed to that argument
+        #Empty array to hold path integrated density distributions in the end
+        #If we have multiple dust types then we just add more sets of zero arrays as cols
+        PredExt_Distribution = torch.zeros(len(source_dists)).double().cuda()
 
-    #Calculate the integral at the outer edge of every cell.
-    #we concatenate a set of zeros first because the integral at the inner edge of the grid must be 0
-    #Then the cumulative sum of the line integral of each cell is concatenated to that, as that is our approximation of the integral at the outer edge of the cell
-    integral_grid = torch.cat((torch.zeros((len(l_bounds)-1,len(b_bounds)-1,1), requires_grad=True), 
-                              torch.cumsum(density_samples.reshape(len(l_bounds)-1,len(b_bounds)-1,len(d_bounds)-1) * (d_bounds[1:] - d_bounds[:-1]), dim=2)), dim=2)
+        #global source_indices
+        source_indices = torch.arange(len(source_dists)).double().cuda() #hack to get around need to know indexes in loop over sources - this could be skipped if an input was created as source_indices with source_df.index.values passed to that argument
+
+        #Calculate the integral at the outer edge of every cell.
+        #we concatenate a set of zeros first because the integral at the inner edge of the grid must be 0
+        #Then the cumulative sum of the line integral of each cell is concatenated to that, as that is our approximation of the integral at the outer edge of the cell
+        integral_grid = torch.cat((torch.zeros((len(l_bounds)-1,len(b_bounds)-1,1), requires_grad=True).double().cuda(), 
+                                  torch.cumsum(density_samples.reshape(len(l_bounds)-1,len(b_bounds)-1,len(d_bounds)-1) * (d_bounds[1:] - d_bounds[:-1]), dim=2)), dim=2)
     
+    else: #Run code on CPU
+        
+        #Empty array to hold path integrated density distributions in the end
+        #If we have multiple dust types then we just add more sets of zero arrays as cols
+        PredExt_Distribution = torch.zeros(len(source_dists))
+
+        #global source_indices
+        source_indices = torch.arange(len(source_dists))#hack to get around need to know indexes in loop over sources - this could be skipped if an input was created as source_indices with source_df.index.values passed to that argument
+
+        #Calculate the integral at the outer edge of every cell.
+        #we concatenate a set of zeros first because the integral at the inner edge of the grid must be 0
+        #Then the cumulative sum of the line integral of each cell is concatenated to that, as that is our approximation of the integral at the outer edge of the cell
+        integral_grid = torch.cat((torch.zeros((len(l_bounds)-1,len(b_bounds)-1,1), requires_grad=True), 
+                                  torch.cumsum(density_samples.reshape(len(l_bounds)-1,len(b_bounds)-1,len(d_bounds)-1) * (d_bounds[1:] - d_bounds[:-1]), dim=2)), dim=2)
     
+
     PredExt_Distribution =  integral_grid[l_ind,b_ind,d_ind] + ((integral_grid[l_ind,b_ind,d_ind+1] - integral_grid[l_ind,b_ind,d_ind])*(source_dists - d_bounds[d_ind]))
 
 

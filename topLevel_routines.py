@@ -183,7 +183,7 @@ def reCalc_PredGrid(recalc_grid_pred, source_df, l_lower_pred, l_upper_pred, n_l
 def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale_length_z, mean_ext_dens, exp_scalefac, 
                 learning_rate, learning_eps, num_iter, num_particles, num_inducing, min_iter, 
                 stop_prcnt, stop_iter, snapshot_iter, resume_training,
-                l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df):
+                l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df, train_gpu):
 
     if retrain_gp:
 
@@ -205,7 +205,7 @@ def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale
         gp = GP_Train_andCondition(scale_length_x, scale_length_y, scale_length_z, mean_ext_dens, exp_scalefac, 
                                     learning_rate, learning_eps, num_iter, num_particles, num_inducing, min_iter, 
                                     stop_prcnt, stop_iter, snapshot_iter, resume_training,
-                                    l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, condition_grid)
+                                    l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, condition_grid, train_gpu)
         print("GP Train Run Time --- %s seconds ---" % (time.time() - gp_start_time))
 
         #Save the GP for prediciting 
@@ -223,7 +223,7 @@ def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale
             raise RuntimeError("The number of input sources is less than one. Please check the input table and train grid & predict grid boundaries carefully!")
         
         #Correctly load the GP model 
-        gp = load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train, b_bounds_train, d_bounds_train, gp_filename="gp_trained.out")
+        gp = load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train, b_bounds_train, d_bounds_train, train_gpu, gp_filename="gp_trained.out")
         # exit()
 
     return gp, condition_grid
@@ -231,14 +231,14 @@ def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale
 
 
 #Use the GP to predict density and extinction on a chosen Grid
-def rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp):
+def rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu):
 
     if repredict_gp:
 
         print("GP Prediciting")
 
         #Predict the density and extinction with trained GP model
-        gpy_dens_median, gpy_dens_16P, gpy_dens_84P, ext_med_cube, ext_16_cube, ext_84_cube = GP_Predict(pred_chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp)
+        gpy_dens_median, gpy_dens_16P, gpy_dens_84P, ext_med_cube, ext_16_cube, ext_84_cube = GP_Predict(pred_chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu)
 
         torch.save(gpy_dens_median, "gpy_dens_median.out")
         torch.save(gpy_dens_16P, "gpy_dens_16P.out")
@@ -262,9 +262,9 @@ def rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, l_bounds_pred,
 
 
     #Convert from torch tensor to numpy array for plotting
-    gpy_dens_median = gpy_dens_median.detach().numpy() 
-    gpy_dens_16P = gpy_dens_16P.detach().numpy()
-    gpy_dens_84P = gpy_dens_84P.detach().numpy()
+    gpy_dens_median = gpy_dens_median.cpu().detach().numpy() 
+    gpy_dens_16P = gpy_dens_16P.cpu().detach().numpy()
+    gpy_dens_84P = gpy_dens_84P.cpu().detach().numpy()
 
 
     return gpy_dens_median, gpy_dens_16P, gpy_dens_84P, ext_med_cube, ext_16_cube, ext_84_cube

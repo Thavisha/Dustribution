@@ -101,7 +101,7 @@ if __name__=="__main__":
     stop_prcnt = 0.01 #0.01 #Percentage (fractional) change of the ELBO below which the training stops. We use 1%(0.01) 
     stop_iter = 10 #Number of iterations to look back at to calculate the average ELBO change to impose the stopping criterion
     snapshot_iter = 20 #At each snapshot_iter take a snapshot of the full GP so that it can be loaded and training can begin from their rather than fully restarting if needed
-    
+   
 
     #Prediction set up
     pred_chunk_size = 5000 #Number of prediction grid chunks to be used at one given time to predict on till the full predict grid is filled
@@ -115,8 +115,13 @@ if __name__=="__main__":
     retrain_gp = True #True/False  #If we do/do not want to rerun the full GP training based parameters given above - must be recalculated if any of the parameters above change except the prediciting grid parameters
     repredict_gp = True #True/False  #If we do/do not want to rerun the GP prediction based parameters given above - must be recalculated if any of the parameters above change
  
-    ###### End of input parameters which need to be set by user ######
+    
+    #Run Algorithm on GPUs or CPUs
+    train_gpu = True #Set True for GPU run or set False for CPU run for the GP training
+    pred_gpu = True #Set True for GPU run or set False for CPU run for the GP predicting
 
+    
+    ###### End of input parameters which need to be set by user ######
 
 
     #Setting if we want to train the full GP from the start or resume training of the GP from a snapshot
@@ -165,14 +170,14 @@ if __name__=="__main__":
     gp, condition_grid = reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale_length_z, mean_ext_dens, exp_scalefac, 
                                         learning_rate, learning_eps, num_iter, num_particles, num_inducing, min_iter, 
                                         stop_prcnt, stop_iter, snapshot_iter, resume_training,
-                                        l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df)
+                                        l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df, train_gpu)
 
     print("GP Model trained and/or loaded")
 
     
     #Use the GP to predict density and extinction on a chosen Grid
     gpy_dens_median, gpy_dens_16P, gpy_dens_84P, ext_med_cube, ext_16_cube, ext_84_cube = rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, 
-                                                                                                        l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp)
+                                                                                                        l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu)
 
     print("GP predicted and/or loaded")
 
