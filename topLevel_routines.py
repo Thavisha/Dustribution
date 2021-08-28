@@ -183,7 +183,7 @@ def reCalc_PredGrid(recalc_grid_pred, source_df, l_lower_pred, l_upper_pred, n_l
 def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale_length_z, mean_ext_dens, exp_scalefac, 
                 learning_rate, learning_eps, num_iter, num_particles, num_inducing, min_iter, 
                 stop_prcnt, stop_iter, snapshot_iter, resume_training,
-                l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df, train_gpu):
+                l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df, train_gpu, pred_gpu):
 
     if retrain_gp:
 
@@ -223,7 +223,7 @@ def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale
             raise RuntimeError("The number of input sources is less than one. Please check the input table and train grid & predict grid boundaries carefully!")
         
         #Correctly load the GP model 
-        gp = load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train, b_bounds_train, d_bounds_train, train_gpu, gp_filename="gp_trained.out")
+        gp = load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train, b_bounds_train, d_bounds_train, train_gpu, pred_gpu, gp_filename="gp_trained.out")
         # exit()
 
     return gp, condition_grid

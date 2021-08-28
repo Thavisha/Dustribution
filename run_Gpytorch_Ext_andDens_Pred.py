@@ -170,7 +170,7 @@ if __name__=="__main__":
     gp, condition_grid = reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale_length_z, mean_ext_dens, exp_scalefac, 
                                         learning_rate, learning_eps, num_iter, num_particles, num_inducing, min_iter, 
                                         stop_prcnt, stop_iter, snapshot_iter, resume_training,
-                                        l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df, train_gpu)
+                                        l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train, source_df, train_gpu, pred_gpu)
 
     print("GP Model trained and/or loaded")
 

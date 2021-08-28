@@ -293,9 +293,12 @@ def GP_Predict(chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bou
 
 
 #Function to Load a Saved GP Model
-def load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train, b_bounds_train, d_bounds_train, gp_filename):
+def load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train, b_bounds_train, d_bounds_train, train_gpu, pred_gpu, gp_filename):
 
-    gp_dict = torch.load(gp_filename)
+    if pred_gpu: #To load the pre-trained GP trained in a GPU which is saved as a GPU tensor, for predicting in a GPU we don't need to do anything 
+        gp_dict = torch.load(gp_filename)
+    else: #If we want to pre in a CPU from GP trained on a GPU where its saved as a GPU tensor we need to do the following
+        gp_dict = torch.load(gp_filename, map_location=torch.device("cpu")) #to remap the GPU tensor saved GP into a CPU tensor
 
     source_dists = condition_grid["dist_p50"].to_numpy()
     source_l = condition_grid["l"].to_numpy()
@@ -312,9 +315,14 @@ def load_GPmodel(num_inducing, condition_grid, threeDGrid_train, l_bounds_train,
     b_ind = condition_grid["b_ind"].to_numpy()
     d_ind = condition_grid["d_ind"].to_numpy()
 
-    
-    gp = LatentDensityGPModel(source_dists, source_l, source_b, l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train_l, threeDGrid_train_b, 
-                                l_ind, b_ind, d_ind, inducing_points, name_prefix="density_gp_model")
+    if pred_gpu: #To load the pre-trained GP trained in a GPU which is saved as a GPU tensor, for predicting in a GPU we don't need to do anything 
+        gp = LatentDensityGPModel(source_dists, source_l, source_b, l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train_l, threeDGrid_train_b, 
+                                    l_ind, b_ind, d_ind, inducing_points, train_gpu, name_prefix="density_gp_model") 
+    else: #If we want to pre in a CPU from GP trained on a GPU where its saved as a GPU tensor we need to do the following
+        gp = LatentDensityGPModel(source_dists, source_l, source_b, l_bounds_train, b_bounds_train, d_bounds_train, threeDGrid_train_l, threeDGrid_train_b, 
+                                    l_ind, b_ind, d_ind, inducing_points, train_gpu=pred_gpu, name_prefix="density_gp_model") 
+
+
     gp.load_state_dict(gp_dict)
     
     return gp
