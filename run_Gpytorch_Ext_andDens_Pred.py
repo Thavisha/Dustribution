@@ -118,8 +118,9 @@ if __name__=="__main__":
     
     #Run Algorithm on GPUs or CPUs
     train_gpu = True #Set True for GPU run or set False for CPU run for the GP training
-    pred_gpu = True #Set True for GPU run or set False for CPU run for the GP predicting
-
+    pred_gpu = False #Set True for GPU run or set False for CPU run for the GP predicting. #We also need to set this to False if we're only plotting in a machine with No GPU
+    plot_gpu = False  #Set True for plotting in the GPU or set False for CPU for plotting following GPU training especially if plotting is done outside a machine with a GPU
+   
     
     ###### End of input parameters which need to be set by user ######
 
@@ -177,7 +178,7 @@ if __name__=="__main__":
     
     #Use the GP to predict density and extinction on a chosen Grid
     gpy_dens_median, gpy_dens_16P, gpy_dens_84P, ext_med_cube, ext_16_cube, ext_84_cube = rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, 
-                                                                                                        l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu)
+                                                                                                        l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu, plot_gpu)
 
     print("GP predicted and/or loaded")
 

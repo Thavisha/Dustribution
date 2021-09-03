@@ -231,7 +231,7 @@ def reTrain_GP(retrain_gp, subsample_size, scale_length_x, scale_length_y, scale
 
 
 #Use the GP to predict density and extinction on a chosen Grid
-def rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu):
+def rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, l_bounds_pred, b_bounds_pred, d_bounds_pred, threeDGrid_pred, gp, pred_gpu, plot_gpu):
 
     if repredict_gp:
 
@@ -252,9 +252,19 @@ def rePredict_GP(repredict_gp, pred_chunk_size, pred_sample_size, l_bounds_pred,
 
         #If we don't want to repredict the GP simply load the pre-predicted density and extinctions for analysis 
         print("Loading GP Predicitions")
-        gpy_dens_median = torch.load("gpy_dens_median.out")
-        gpy_dens_16P = torch.load("gpy_dens_16P.out")
-        gpy_dens_84P = torch.load("gpy_dens_84P.out")
+        
+        if plot_gpu: #Need to set this here so that if we're plotting outside the GPU then the file is loaded properly
+
+            gpy_dens_median = torch.load("gpy_dens_median.out")
+            gpy_dens_16P = torch.load("gpy_dens_16P.out")
+            gpy_dens_84P = torch.load("gpy_dens_84P.out")
+
+        else: 
+            #Need this here to open the file properly if we have trained and predicted in a GPU but want to do the plotting in a CPU
+            gpy_dens_median = torch.load("gpy_dens_median.out", map_location=torch.device("cpu"))
+            gpy_dens_16P = torch.load("gpy_dens_16P.out", map_location=torch.device("cpu"))
+            gpy_dens_84P = torch.load("gpy_dens_84P.out", map_location=torch.device("cpu"))        
+
         ext_med_cube = np.load("ext_med_cube.pkl.npy", allow_pickle=True)
         ext_16_cube = np.load("ext_16_cube.pkl.npy", allow_pickle=True)
         ext_84_cube = np.load("ext_84_cube.pkl.npy", allow_pickle=True)
