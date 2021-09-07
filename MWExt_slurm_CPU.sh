@@ -34,23 +34,8 @@
 ##SBATCH --mem=2048000  ##Amount of memory needed per node #THIS IS HOW YOU CHOOSE THE BIG MEMORY MACHINES
 
 
-##module load anaconda/3/2020.02
-##source /mpcdf/soft/SLE_15/packages/x86_64/anaconda/3/2020.02/etc/profile.d/conda.sh
-##source activate /u/thadhar/conda-envs/MWExtEnv
 
-
-##srun /u/thadhar/conda-envs/MWExtEnv/bin/python run_Gpytorch_Ext_andDens_Pred.py
-
-module purge
-module load anaconda/3/2021.05
-module load cuda/11.2
-module load pytorch/gpu-cuda-11.2/1.9.0
-module load gpytorch/gpu-cuda-11.2/pytorch-1.9.0/.1.5.0 ##please note the dot before the gpytorch version number (1.5.0)
-
-PYTHONPATH=/u/thadhar/.local/lib/python3.8/site-packages/:$PYTHONPATH
-echo PYTHONPATH = $PYTHONPATH
-
-srun python run_Gpytorch_Ext_andDens_Pred.py
+srun -u python run_Gpytorch_Ext_andDens_Pred.py
 
 
 

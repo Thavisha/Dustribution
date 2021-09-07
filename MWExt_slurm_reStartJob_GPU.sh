@@ -40,7 +40,7 @@
 ##SBATCH --mem=2048000  ##Amount of memory needed per node #THIS IS HOW YOU CHOOSE THE BIG MEMORY MACHINES
 
 
-srun python run_Gpytorch_Ext_andDens_Pred.py resume_training
+srun -u python run_Gpytorch_Ext_andDens_Pred.py resume_training
 
 
 
