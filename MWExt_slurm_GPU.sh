@@ -11,7 +11,7 @@
 #SBATCH -e slurm_stderr/MW3Ddense_%j.error
 
 # Get status mails about your jobs
-#SBATCH --mail-user dharmawardena@mpia.de
+#SBATCH --mail-user ENTER EMAIL
 #SBATCH --mail-type=ALL
 
 
@@ -31,7 +31,7 @@
 #SBATCH --time=24:00:00
 
 ##SBATCH --nodelist=karun-node07
-#SBATCH -D /ptmp/thadhar/Orion_20Grid_GPU
+#SBATCH -D /ENTER PATH TO slurm_stderr and slurm_stdout FOLDERS
 
 ##SBATCH --cpus-per-task=144 ##12 24
 #SBATCH --get-user-env
@@ -39,24 +39,6 @@
 # The following is *essential* if you want more than one task per node, i.e. limit the memory allocation
 ##SBATCH --mem=2048000  ##Amount of memory needed per node #THIS IS HOW YOU CHOOSE THE BIG MEMORY MACHINES
 
-
-##module load anaconda/3/2020.02
-##module load cuda/11.2
-##source /mpcdf/soft/SLE_15/packages/x86_64/anaconda/3/2020.02/etc/profile.d/conda.sh
-##source activate /u/thadhar/conda-envs/cuda-test
-##export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-
-
-##srun /u/thadhar/conda-envs/cuda-test/bin/python run_Gpytorch_Ext_andDens_Pred.py
-
-module purge
-module load anaconda/3/2021.05
-module load cuda/11.2
-module load pytorch/gpu-cuda-11.2/1.9.0
-module load gpytorch/gpu-cuda-11.2/pytorch-1.9.0/.1.5.0 ##please note the dot before the gpytorch version number (1.5.0)
-
-PYTHONPATH=/u/thadhar/.local/lib/python3.8/site-packages/:$PYTHONPATH
-echo PYTHONPATH = $PYTHONPATH
 
 srun python run_Gpytorch_Ext_andDens_Pred.py
 

@@ -11,7 +11,7 @@
 #SBATCH -e slurm_stderr/MW3Ddense_%j.error
 
 # Get status mails about your jobs
-#SBATCH --mail-user dharmawardena@mpia.de
+#SBATCH --mail-user ENTER EMAIL
 #SBATCH --mail-type=ALL
 
 
@@ -25,7 +25,7 @@
 #SBATCH --time=24:00:00
 
 ##SBATCH --nodelist=karun-node07 ##Not needed for Raven
-#SBATCH -D /ptmp/thadhar/Orion_20Grid_CPU
+#SBATCH -D /ENTER PATH TO slurm_stderr and slurm_stdout FOLDERS
 
 #SBATCH --cpus-per-task=144 ##12 24
 #SBATCH --get-user-env
