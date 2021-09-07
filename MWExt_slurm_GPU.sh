@@ -31,7 +31,7 @@
 #SBATCH --time=24:00:00
 
 ##SBATCH --nodelist=karun-node07
-#SBATCH -D /ENTER PATH TO slurm_stderr and slurm_stdout FOLDERS
+#SBATCH -D /ENTER PATH TO FOLDER WITH ALL FILES
 
 ##SBATCH --cpus-per-task=144 ##12 24
 #SBATCH --get-user-env
