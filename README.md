@@ -1,5 +1,7 @@
 Mapping the Interstellar Dust Extinction and Density in 3D
 
+The latest results from Dustribution can be viewed and downloaded from https://www2.mpia-hd.mpg.de/homes/tmueller/projects/ThavishaDustDensity/index.html
+
 ** The method utilises latent variable Gaussian processes combined with variational inference with GP optimisation carried out using the gradient descent algorithm ADAMW. 
 
 ** At each optimisation iteration the GP predicts a full log10(density) of the region of interest. This is converted to density and then integrated along each line-of-sight to which we have a input star. This integration gives us the model extinction to each star which is then compared to the observed extinction to each star to derive a likelihood.
