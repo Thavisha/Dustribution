@@ -2,6 +2,10 @@ Mapping the Interstellar Dust Extinction and Density in 3D
 
 The latest results from Dustribution can be viewed and downloaded from https://www2.mpia-hd.mpg.de/homes/tmueller/projects/ThavishaDustDensity/index.html
 
+References:
+- Dharmawardena et al., 2022, Astronomy & Astrophysics, Volume 658, id.A166, 30 pp. https://www.aanda.org/articles/aa/full_html/2022/02/aa41298-21/aa41298-21.html
+- Dharmawardena et al., accepted MNRAS, 2022
+
 ** The method utilises latent variable Gaussian processes combined with variational inference with GP optimisation carried out using the gradient descent algorithm ADAMW. 
 
 ** At each optimisation iteration the GP predicts a full log10(density) of the region of interest. This is converted to density and then integrated along each line-of-sight to which we have a input star. This integration gives us the model extinction to each star which is then compared to the observed extinction to each star to derive a likelihood.
@@ -33,12 +37,4 @@ Once the GP is trained it is used to predict on the prediction grid to out put t
 - The plotPerformance.py file plots the perfomance check plots such as ELBO variation with iteration. 
 - The plotStructure.py file plots the GP predicted density and extinction maps. 
 - The plotResiduals.py file plots the residuals such as Predicted vs. True extinction and residual histogram.
-
-
-
-
-
-
-
-
 

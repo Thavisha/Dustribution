@@ -61,7 +61,9 @@ class LatentDensityGPModel(gpytorch.models.ApproximateGP):
         # Define the variational distribution and strategy of the GP
         # We initialize the inducing points to lie on a grid from 0 to T
         variational_distribution = gpytorch.variational.CholeskyVariationalDistribution(num_inducing_points=inducing_points.size(0))
-        variational_strategy = gpytorch.variational.VariationalStrategy(self, inducing_points, variational_distribution)
+        #variational_strategy = gpytorch.variational.VariationalStrategy(self, inducing_points, variational_distribution) #Learn the inducing point locations
+        variational_strategy = gpytorch.variational.VariationalStrategy(self, inducing_points, variational_distribution, learn_inducing_locations=True) #Keep IP locations set and do not learn them
+
 
         # Define model
         super().__init__(variational_strategy=variational_strategy)

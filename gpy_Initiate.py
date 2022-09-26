@@ -336,18 +336,6 @@ def save_Snapshot(iteration, gp, optimizer, loss, snapshot_file, elbo_list, lsx_
                     snapshot_file)
 
 
-    # #Delete snapshots older than the last five saved (we can save more if we want to)
-    # snapshots = glob("Snapshot_*.out") #Pickout all snapshot files to figure out which iteration they are from - gives a list of the snapshot file names
-
-    # number_of_snapshots_tosave = 2 #Delete all snapshots except the five highest (last) iterations
-
-    # if len(snapshots) > number_of_snapshots_tosave:
-    #     snapshot_iters = np.array([ np.int(re.split("[_.]", snapshot)[1]) for snapshot in snapshots])
-    #     snapshot_list_ascend = list(np.array(snapshots)[np.argsort(snapshot_iters)]) #Arrange the snapshot list by asending iteration number
-    #     for f in snapshot_list_ascend[:-number_of_snapshots_tosave]:
-    #         os.remove(f) #Delete all snapshots except the five highest (last) iterations
-
-
     return
 
 
