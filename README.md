@@ -27,9 +27,6 @@ Then the training grid is used within the GP along with GP setup parameters to t
 Once the GP is trained it is used to predict on the prediction grid to out put the 16th,50th,84th percentiles of the extinction and density maps of our region which is saved and ready for visualisation
 
 ** File structure (In the approximate order of usage in the process): 
-- The executeRunsUntilComplete.sh is a bash script which automatically starts and continues all jobs required to finish running the full GP routine till the end.
-- The MWExt_slurm.sh initiates the whole routine in que in the server for a new job
-- The MWExt_slurm_reStartJob.sh initiates the routines when the GP has started partially and needs to be continued due to cancellation eg. due to time out after 24 hours in Raven.
 - The run_Gpytorch_Ext_andDens_Pred.py file excutes the full process and calls upon the top level functions/routines held within the topLevel_routines.py file. 
 - The threeD_Grid_Build.py buils the train and predict grids from the input region coordinates. 
 - The gpy_Initiate.py file caries out the GP training and then from the trained GP predicting the extinction and density maps. The GP class for this is held in the gpyClass_Latent.py file. 
