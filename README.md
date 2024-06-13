@@ -3,9 +3,9 @@ Mapping the Interstellar Dust Extinction and Density in 3D
 The latest results from Dustribution can be viewed and downloaded from www.mwdust.com
 
 References:
-- Dharmawardena et al., 2024 Accepted MNRAS
-- Dharmawardena et al., 2023, Astronomy & Astrophysics, Volume 658, id.A166, 30 pp. https://www.aanda.org/articles/aa/full_html/2022/02/aa41298-21/aa41298-21.html
-- Dharmawardena et al., accepted MNRAS, 2022
+- Dharmawardena et al., 2024 Accepted MNRAS [https://ui.adsabs.harvard.edu/abs/2024arXiv240606740D/abstract]
+- Dharmawardena et al., 2023, Monthly Notices of the Royal Astronomical Society, Volume 519, Issue 1, pp.228-247 [https://ui.adsabs.harvard.edu/abs/2023MNRAS.519..228D/abstract]
+- Dharmawardena et al., 2022,  Astronomy & Astrophysics, Volume 658, id.A166, 30 pp [https://ui.adsabs.harvard.edu/abs/2022A%26A...658A.166D/abstract]
 
 ** The method utilises latent variable Gaussian processes combined with variational inference with GP optimisation carried out using the gradient descent algorithm ADAMW. 
 
